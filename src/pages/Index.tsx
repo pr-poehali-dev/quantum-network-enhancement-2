@@ -2,12 +2,157 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 
+const SEND_APPLICATION_URL = "https://functions.poehali.dev/414195d8-31f8-470f-8abe-4a514ceb2f72";
+
+const ApplicationForm = ({ onClose }: { onClose: () => void }) => {
+  const [form, setForm] = useState({ name: "", country: "", position: "", email: "" });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch(SEND_APPLICATION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStatus("success");
+      } else {
+        setErrorMsg(data.error || "Ошибка отправки");
+        setStatus("error");
+      }
+    } catch {
+      setErrorMsg("Не удалось отправить заявку. Попробуйте позже.");
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+      <div className="bg-[#16181f] border border-[#2a2d38] rounded-2xl p-6 sm:p-8 w-full max-w-md relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#6b7a8d] hover:text-white transition-colors"
+        >
+          <Icon name="X" className="w-5 h-5" />
+        </button>
+
+        {status === "success" ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-[#2d6a4f] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Icon name="CheckCircle" className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">Заявка отправлена!</h3>
+            <p className="text-[#8b9ab0] text-sm mb-6">
+              Мы получили вашу заявку и свяжемся с вами для верификации.
+            </p>
+            <Button onClick={onClose} className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-8">
+              Закрыть
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-[#2d6a4f] rounded-full flex items-center justify-center">
+                <Icon name="Globe" className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">Заявка на вступление</h3>
+                <p className="text-[#6b7a8d] text-xs">WW3 — верифицированное сообщество</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">Полное имя</label>
+                <input
+                  type="text"
+                  placeholder="Иван Иванов"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">Страна</label>
+                <input
+                  type="text"
+                  placeholder="Россия"
+                  value={form.country}
+                  onChange={(e) => setForm({ ...form, country: e.target.value })}
+                  className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">Должность / Роль</label>
+                <input
+                  type="text"
+                  placeholder="Депутат парламента"
+                  value={form.position}
+                  onChange={(e) => setForm({ ...form, position: e.target.value })}
+                  className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">Email для связи</label>
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
+                  required
+                />
+              </div>
+
+              {status === "error" && (
+                <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-2.5 text-red-400 text-sm">
+                  {errorMsg}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={status === "loading"}
+                className="w-full bg-[#2d6a4f] hover:bg-[#1b4332] text-white py-3 rounded-lg font-semibold mt-2 disabled:opacity-60"
+              >
+                {status === "loading" ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Icon name="Loader2" className="w-4 h-4 animate-spin" />
+                    Отправляем...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Icon name="Send" className="w-4 h-4" />
+                    Подать заявку
+                  </span>
+                )}
+              </Button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#1e2028] text-white overflow-x-hidden">
+      {showForm && <ApplicationForm onClose={() => setShowForm(false)} />}
+
       {/* Навигация */}
       <nav className="bg-[#16181f] border-b border-[#0d0e12] px-4 sm:px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -16,7 +161,7 @@ const Index = () => {
               <Icon name="Globe" className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white">PoliConnect</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-white">WW3</h1>
               <p className="text-xs text-[#8b9ab0] hidden sm:block">Глобальная сеть для политиков</p>
             </div>
           </div>
@@ -25,7 +170,10 @@ const Index = () => {
               <Icon name="Info" className="w-4 h-4 mr-2" />
               О платформе
             </Button>
-            <Button className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-6 py-2 rounded text-sm font-medium">
+            <Button
+              onClick={() => setShowForm(true)}
+              className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-6 py-2 rounded text-sm font-medium"
+            >
               Вступить
             </Button>
           </div>
@@ -38,7 +186,6 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Мобильное меню */}
         {mobileMenuOpen && (
           <div className="sm:hidden mt-4 pt-4 border-t border-[#0d0e12]">
             <div className="flex flex-col gap-3">
@@ -46,7 +193,10 @@ const Index = () => {
                 <Icon name="Info" className="w-4 h-4 mr-2" />
                 О платформе
               </Button>
-              <Button className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-6 py-2 rounded text-sm font-medium">
+              <Button
+                onClick={() => { setShowForm(true); setMobileMenuOpen(false); }}
+                className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-6 py-2 rounded text-sm font-medium"
+              >
                 Вступить
               </Button>
             </div>
@@ -54,11 +204,10 @@ const Index = () => {
         )}
       </nav>
 
-      {/* Макет в стиле Discord */}
+      {/* Макет */}
       <div className="flex min-h-screen">
-        {/* Боковая панель регионов */}
         <div className="hidden lg:flex w-[72px] bg-[#0d0e12] flex-col items-center py-3 gap-2">
-          <div className="w-12 h-12 bg-[#2d6a4f] rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer" title="Глобальный">
+          <div className="w-12 h-12 bg-[#2d6a4f] rounded-2xl hover:rounded-xl transition-all duration-200 flex items-center justify-center cursor-pointer">
             <Icon name="Globe" className="w-6 h-6 text-white" />
           </div>
           <div className="w-8 h-[2px] bg-[#1e2028] rounded-full"></div>
@@ -72,14 +221,10 @@ const Index = () => {
           ))}
         </div>
 
-        {/* Основной контент */}
         <div className="flex-1 flex flex-col lg:flex-row">
-          {/* Боковая панель каналов */}
-          <div
-            className={`${mobileSidebarOpen ? "block" : "hidden"} lg:block w-full lg:w-60 bg-[#16181f] flex flex-col`}
-          >
+          <div className={`${mobileSidebarOpen ? "block" : "hidden"} lg:block w-full lg:w-60 bg-[#16181f] flex flex-col`}>
             <div className="p-4 border-b border-[#0d0e12] flex items-center justify-between">
-              <h2 className="text-white font-semibold text-base">PoliConnect</h2>
+              <h2 className="text-white font-semibold text-base">WW3</h2>
               <Button
                 variant="ghost"
                 className="lg:hidden text-[#8b9ab0] hover:text-white hover:bg-[#2a2d38] p-1"
@@ -105,9 +250,7 @@ const Index = () => {
                     <div
                       key={channel.name}
                       className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer ${
-                        channel.active
-                          ? "bg-[#2a2d38] text-white"
-                          : "text-[#6b7a8d] hover:text-[#c8d0dc] hover:bg-[#22252f]"
+                        channel.active ? "bg-[#2a2d38] text-white" : "text-[#6b7a8d] hover:text-[#c8d0dc] hover:bg-[#22252f]"
                       }`}
                     >
                       <Icon name="Hash" className="w-4 h-4" />
@@ -134,7 +277,6 @@ const Index = () => {
                 </div>
               </div>
             </div>
-            {/* Текущий пользователь */}
             <div className="p-2 bg-[#12141a] flex items-center gap-2">
               <div className="w-8 h-8 bg-[#2d6a4f] rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">P</span>
@@ -154,9 +296,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Область чата */}
           <div className="flex-1 flex flex-col">
-            {/* Заголовок чата */}
             <div className="h-12 bg-[#1e2028] border-b border-[#0d0e12] flex items-center px-4 gap-2">
               <Button
                 variant="ghost"
@@ -176,28 +316,25 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Сообщения */}
             <div className="flex-1 p-2 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto">
-              {/* Приветственное сообщение */}
               <div className="flex gap-2 sm:gap-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#2d6a4f] rounded-full flex items-center justify-center flex-shrink-0">
                   <Icon name="Globe" className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-white font-semibold text-sm sm:text-base">PoliConnect</span>
+                    <span className="text-white font-semibold text-sm sm:text-base">WW3</span>
                     <span className="text-[#6b7a8d] text-xs">сегодня в 09:00</span>
                   </div>
                   <div className="mt-1 bg-[#2d6a4f]/20 border border-[#2d6a4f]/40 rounded-lg p-3 sm:p-4 max-w-2xl">
                     <p className="text-[#c8d0dc] text-sm sm:text-base leading-relaxed">
-                      👋 Добро пожаловать в <strong className="text-white">PoliConnect</strong> — первую международную платформу для политического диалога.
+                      👋 Добро пожаловать в <strong className="text-white">WW3</strong> — первую международную платформу для политического диалога.
                       Здесь лидеры, дипломаты и политики со всего мира обмениваются взглядами, строят коалиции и формируют повестку будущего.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Сообщение 1 */}
               <div className="flex gap-2 sm:gap-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1a3a5c] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs sm:text-sm font-medium">🇩🇪</span>
@@ -214,7 +351,6 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Сообщение 2 */}
               <div className="flex gap-2 sm:gap-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#5c1a3a] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs sm:text-sm font-medium">🇧🇷</span>
@@ -231,7 +367,6 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Сообщение 3 */}
               <div className="flex gap-2 sm:gap-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#3a1a5c] rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-xs sm:text-sm font-medium">🇯🇵</span>
@@ -248,7 +383,7 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Главный CTA блок */}
+              {/* Главный CTA */}
               <div className="my-6 sm:my-8 text-center px-4 py-8 sm:py-16 bg-[#16181f] rounded-xl border border-[#2a2d38]">
                 <div className="w-16 h-16 bg-[#2d6a4f] rounded-full flex items-center justify-center mx-auto mb-6">
                   <Icon name="Globe" className="w-8 h-8 text-white" />
@@ -257,10 +392,13 @@ const Index = () => {
                   Международная площадка<br />для политического диалога
                 </h2>
                 <p className="text-[#8b9ab0] text-base sm:text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-                  PoliConnect объединяет политиков, дипломатов и лидеров мнений из более чем 80 стран. Безопасная верифицированная среда для реального обмена взглядами.
+                  WW3 объединяет политиков, дипломатов и лидеров мнений из более чем 80 стран. Безопасная верифицированная среда для реального обмена взглядами.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-8 py-3 rounded-lg text-base font-semibold">
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-8 py-3 rounded-lg text-base font-semibold"
+                  >
                     <Icon name="UserPlus" className="w-4 h-4 mr-2" />
                     Подать заявку
                   </Button>
@@ -271,37 +409,13 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Возможности платформы */}
+              {/* Возможности */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2">
                 {[
-                  {
-                    icon: "ShieldCheck",
-                    title: "Верификация личности",
-                    description: "Каждый участник проходит официальную проверку статуса. Только действующие политики и дипломаты.",
-                    color: "text-[#60a5fa]",
-                    bg: "bg-[#1a3a5c]/30",
-                  },
-                  {
-                    icon: "Languages",
-                    title: "Мультиязычность",
-                    description: "Встроенный перевод на 40+ языков. Общайтесь с коллегами без языкового барьера.",
-                    color: "text-[#34d399]",
-                    bg: "bg-[#064e3b]/30",
-                  },
-                  {
-                    icon: "Lock",
-                    title: "Защищённые каналы",
-                    description: "Приватные комнаты для конфиденциальных переговоров с end-to-end шифрованием.",
-                    color: "text-[#f59e0b]",
-                    bg: "bg-[#451a03]/30",
-                  },
-                  {
-                    icon: "BarChart3",
-                    title: "Аналитика и голосования",
-                    description: "Проводите опросы, собирайте мнения и отслеживайте позиции по ключевым вопросам.",
-                    color: "text-[#a78bfa]",
-                    bg: "bg-[#2d1a5c]/30",
-                  },
+                  { icon: "ShieldCheck", title: "Верификация личности", description: "Каждый участник проходит официальную проверку статуса. Только действующие политики и дипломаты.", color: "text-[#60a5fa]", bg: "bg-[#1a3a5c]/30" },
+                  { icon: "Languages", title: "Мультиязычность", description: "Встроенный перевод на 40+ языков. Общайтесь с коллегами без языкового барьера.", color: "text-[#34d399]", bg: "bg-[#064e3b]/30" },
+                  { icon: "Lock", title: "Защищённые каналы", description: "Приватные комнаты для конфиденциальных переговоров с end-to-end шифрованием.", color: "text-[#f59e0b]", bg: "bg-[#451a03]/30" },
+                  { icon: "BarChart3", title: "Аналитика и голосования", description: "Проводите опросы, собирайте мнения и отслеживайте позиции по ключевым вопросам.", color: "text-[#a78bfa]", bg: "bg-[#2d1a5c]/30" },
                 ].map((feature) => (
                   <div key={feature.title} className={`${feature.bg} border border-[#2a2d38] rounded-xl p-5`}>
                     <div className={`${feature.color} mb-3`}>
@@ -313,7 +427,7 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Rich Presence / Статус участника */}
+              {/* Активность */}
               <div className="bg-[#12141a] border border-[#2a2d38] rounded-xl p-4 sm:p-6 mx-2">
                 <div className="flex items-center gap-2 mb-4">
                   <Icon name="Activity" className="w-4 h-4 text-[#2d6a4f]" />
@@ -324,7 +438,7 @@ const Index = () => {
                     <Icon name="Globe" className="w-7 h-7 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-white font-semibold text-sm">PoliConnect</div>
+                    <div className="text-white font-semibold text-sm">WW3</div>
                     <div className="text-[#8b9ab0] text-xs mt-0.5">🌐 Обсуждает: Климатическое соглашение 2026</div>
                     <div className="text-[#8b9ab0] text-xs">📍 Форум: Международная безопасность</div>
                     <div className="flex items-center gap-2 mt-2">
@@ -333,12 +447,8 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 flex-shrink-0">
-                    <Button size="sm" className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white text-xs px-3 h-7">
-                      Написать
-                    </Button>
-                    <Button size="sm" variant="outline" className="border-[#2a2d38] text-[#8b9ab0] hover:text-white text-xs px-3 h-7">
-                      Профиль
-                    </Button>
+                    <Button size="sm" className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white text-xs px-3 h-7">Написать</Button>
+                    <Button size="sm" variant="outline" className="border-[#2a2d38] text-[#8b9ab0] hover:text-white text-xs px-3 h-7">Профиль</Button>
                   </div>
                 </div>
               </div>
@@ -360,13 +470,14 @@ const Index = () => {
 
               {/* Финальный CTA */}
               <div className="text-center py-10 sm:py-16 px-4">
-                <h3 className="text-xl sm:text-3xl font-bold text-white mb-4">
-                  Готовы присоединиться?
-                </h3>
+                <h3 className="text-xl sm:text-3xl font-bold text-white mb-4">Готовы присоединиться?</h3>
                 <p className="text-[#8b9ab0] mb-8 max-w-md mx-auto">
                   Подайте заявку на верификацию и станьте частью глобального политического сообщества.
                 </p>
-                <Button className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-10 py-3 rounded-lg text-base font-semibold">
+                <Button
+                  onClick={() => setShowForm(true)}
+                  className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-10 py-3 rounded-lg text-base font-semibold"
+                >
                   <Icon name="UserPlus" className="w-4 h-4 mr-2" />
                   Подать заявку
                 </Button>
@@ -376,22 +487,17 @@ const Index = () => {
 
           {/* Правая панель участников */}
           <div className="hidden xl:flex w-60 bg-[#16181f] flex-col p-4 border-l border-[#0d0e12]">
-            <h3 className="text-[#6b7a8d] text-xs font-semibold uppercase tracking-wide mb-3">
-              Онлайн — 128
-            </h3>
+            <h3 className="text-[#6b7a8d] text-xs font-semibold uppercase tracking-wide mb-3">Онлайн — 128</h3>
             <div className="space-y-1">
               {[
-                { name: "Klaus Weber", country: "🇩🇪 Германия", role: "Бундестаг", color: "bg-[#60a5fa]" },
-                { name: "Maria Costa", country: "🇧🇷 Бразилия", role: "Сенат", color: "bg-[#f97316]" },
-                { name: "Hiroshi Tanaka", country: "🇯🇵 Япония", role: "Парламент", color: "bg-[#a78bfa]" },
-                { name: "Amara Diallo", country: "🇸🇳 Сенегал", role: "Министерство", color: "bg-[#34d399]" },
-                { name: "Elena Morozova", country: "🇧🇬 Болгария", role: "Парламент", color: "bg-[#f472b6]" },
-                { name: "James Okafor", country: "🇳🇬 Нигерия", role: "Сенат", color: "bg-[#fbbf24]" },
+                { name: "Klaus Weber", country: "🇩🇪 Германия", color: "bg-[#60a5fa]" },
+                { name: "Maria Costa", country: "🇧🇷 Бразилия", color: "bg-[#f97316]" },
+                { name: "Hiroshi Tanaka", country: "🇯🇵 Япония", color: "bg-[#a78bfa]" },
+                { name: "Amara Diallo", country: "🇸🇳 Сенегал", color: "bg-[#34d399]" },
+                { name: "Elena Morozova", country: "🇧🇬 Болгария", color: "bg-[#f472b6]" },
+                { name: "James Okafor", country: "🇳🇬 Нигерия", color: "bg-[#fbbf24]" },
               ].map((member) => (
-                <div
-                  key={member.name}
-                  className="flex items-center gap-3 p-2 rounded hover:bg-[#22252f] cursor-pointer group"
-                >
+                <div key={member.name} className="flex items-center gap-3 p-2 rounded hover:bg-[#22252f] cursor-pointer group">
                   <div className="relative">
                     <div className={`w-8 h-8 ${member.color} rounded-full flex items-center justify-center flex-shrink-0`}>
                       <Icon name="User" className="w-4 h-4 text-white" />
@@ -399,9 +505,7 @@ const Index = () => {
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#34d399] rounded-full border-2 border-[#16181f]"></div>
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[#c8d0dc] text-sm font-medium truncate group-hover:text-white">
-                      {member.name}
-                    </div>
+                    <div className="text-[#c8d0dc] text-sm font-medium truncate group-hover:text-white">{member.name}</div>
                     <div className="text-[#6b7a8d] text-xs truncate">{member.country}</div>
                   </div>
                 </div>
