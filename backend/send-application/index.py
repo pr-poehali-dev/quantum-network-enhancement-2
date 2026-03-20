@@ -1,6 +1,7 @@
 import json
 import os
 import smtplib
+import traceback
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import psycopg2
@@ -107,8 +108,9 @@ def handler(event: dict, context) -> dict:
             server.login(smtp_email, smtp_password)
             server.sendmail(smtp_email, smtp_email, msg.as_string())
             server.sendmail(smtp_email, email, confirm.as_string())
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[EMAIL ERROR] {e}")
+        traceback.print_exc()
 
     return {
         'statusCode': 200,
