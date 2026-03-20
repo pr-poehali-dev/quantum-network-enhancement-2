@@ -282,9 +282,9 @@ const T: Record<LangKey, Record<string, string>> = {
   },
 };
 
-const ApplicationForm = ({ onClose, t }: { onClose: () => void; t: Record<string, string> }) => {
+const ApplicationForm = ({ onClose, onSuccess, t }: { onClose: () => void; onSuccess: (name: string) => void; t: Record<string, string> }) => {
   const [form, setForm] = useState({ name: "", country: "", position: "", email: "" });
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -299,7 +299,7 @@ const ApplicationForm = ({ onClose, t }: { onClose: () => void; t: Record<string
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setStatus("success");
+        onSuccess(form.name);
       } else {
         setErrorMsg(data.error || t.errFill);
         setStatus("error");
@@ -317,69 +317,56 @@ const ApplicationForm = ({ onClose, t }: { onClose: () => void; t: Record<string
           <Icon name="X" className="w-5 h-5" />
         </button>
 
-        {status === "success" ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-[#2d6a4f] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon name="CheckCircle" className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-[#2d6a4f] rounded-full flex items-center justify-center">
+              <Icon name="Globe" className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">{t.successTitle}</h3>
-            <p className="text-[#8b9ab0] text-sm mb-6">{t.successDesc}</p>
-            <Button onClick={onClose} className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-8">{t.close}</Button>
+            <div>
+              <h3 className="text-white font-bold text-lg">{t.formTitle}</h3>
+              <p className="text-[#6b7a8d] text-xs">{t.formSub}</p>
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-[#2d6a4f] rounded-full flex items-center justify-center">
-                <Icon name="Globe" className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-lg">{t.formTitle}</h3>
-                <p className="text-[#6b7a8d] text-xs">{t.formSub}</p>
-              </div>
-            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { key: "name", label: t.fieldName, placeholder: "Ivan Petrov", type: "text" },
-                { key: "country", label: t.fieldCountry, placeholder: "Russia", type: "text" },
-                { key: "position", label: t.fieldPosition, placeholder: "Member of Parliament", type: "text" },
-                { key: "email", label: t.fieldEmail, placeholder: "name@example.com", type: "email" },
-              ].map(({ key, label, placeholder, type }) => (
-                <div key={key}>
-                  <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">{label}</label>
-                  <input
-                    type={type}
-                    placeholder={placeholder}
-                    value={form[key as keyof typeof form]}
-                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                    className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
-                    required
-                  />
-                </div>
-              ))}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {[
+              { key: "name", label: t.fieldName, placeholder: "Ivan Petrov", type: "text" },
+              { key: "country", label: t.fieldCountry, placeholder: "Russia", type: "text" },
+              { key: "position", label: t.fieldPosition, placeholder: "Member of Parliament", type: "text" },
+              { key: "email", label: t.fieldEmail, placeholder: "name@example.com", type: "email" },
+            ].map(({ key, label, placeholder, type }) => (
+              <div key={key}>
+                <label className="text-[#8b9ab0] text-xs font-medium uppercase tracking-wide mb-1 block">{label}</label>
+                <input
+                  type={type}
+                  placeholder={placeholder}
+                  value={form[key as keyof typeof form]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  className="w-full bg-[#1e2028] border border-[#2a2d38] rounded-lg px-4 py-2.5 text-white placeholder-[#4a5568] text-sm focus:outline-none focus:border-[#2d6a4f] transition-colors"
+                  required
+                />
+              </div>
+            ))}
 
-              {status === "error" && (
-                <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-2.5 text-red-400 text-sm">{errorMsg}</div>
+            {status === "error" && (
+              <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-2.5 text-red-400 text-sm">{errorMsg}</div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={status === "loading"}
+              className="w-full bg-[#2d6a4f] hover:bg-[#1b4332] text-white py-3 rounded-lg font-semibold mt-2 disabled:opacity-60"
+            >
+              {status === "loading" ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Icon name="Loader2" className="w-4 h-4 animate-spin" />{t.sending}
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <Icon name="Send" className="w-4 h-4" />{t.send}
+                </span>
               )}
-
-              <Button
-                type="submit"
-                disabled={status === "loading"}
-                className="w-full bg-[#2d6a4f] hover:bg-[#1b4332] text-white py-3 rounded-lg font-semibold mt-2 disabled:opacity-60"
-              >
-                {status === "loading" ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Icon name="Loader2" className="w-4 h-4 animate-spin" />{t.sending}
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <Icon name="Send" className="w-4 h-4" />{t.send}
-                  </span>
-                )}
-              </Button>
-            </form>
-          </>
-        )}
+            </Button>
+          </form>
       </div>
     </div>
   );
@@ -391,13 +378,30 @@ const Index = () => {
   const [showForm, setShowForm] = useState(false);
   const [lang, setLang] = useState<LangKey>("ru");
   const [langOpen, setLangOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(() => !!localStorage.getItem("ww3_user"));
+  const [userName, setUserName] = useState(() => localStorage.getItem("ww3_user") || "");
+
+  const handleLogin = (name: string) => {
+    localStorage.setItem("ww3_user", name);
+    setUserName(name);
+    setLoggedIn(true);
+    setShowForm(false);
+  };
 
   const t = T[lang];
   const isRtl = lang === "ar";
 
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen bg-[#1e2028] text-white flex items-center justify-center px-4">
+        <ApplicationForm onClose={() => {}} onSuccess={handleLogin} t={t} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#1e2028] text-white overflow-x-hidden" dir={isRtl ? "rtl" : "ltr"}>
-      {showForm && <ApplicationForm onClose={() => setShowForm(false)} t={t} />}
+      {showForm && <ApplicationForm onClose={() => setShowForm(false)} onSuccess={handleLogin} t={t} />}
 
       {/* Навигация */}
       <nav className="bg-[#16181f] border-b border-[#0d0e12] px-4 sm:px-6 py-4">
@@ -443,9 +447,12 @@ const Index = () => {
               <Icon name="Info" className="w-4 h-4 mr-2" />
               {t.about}
             </Button>
-            <Button onClick={() => setShowForm(true)} className="bg-[#2d6a4f] hover:bg-[#1b4332] text-white px-6 py-2 rounded text-sm font-medium">
-              {t.join}
-            </Button>
+            <div className="flex items-center gap-2 bg-[#2a2d38] px-4 py-2 rounded-lg">
+              <div className="w-6 h-6 bg-[#2d6a4f] rounded-full flex items-center justify-center text-xs font-bold text-white">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-white text-sm font-medium">{userName}</span>
+            </div>
           </div>
 
           <Button
