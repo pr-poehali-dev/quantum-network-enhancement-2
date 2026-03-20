@@ -1,3 +1,7 @@
 {
+  "get-chats": "https://functions.poehali.dev/b8d47118-510e-4d18-ad63-9095dd5ae570",
+  "get-messages": "https://functions.poehali.dev/c3d47375-fb0b-4258-ab79-ed04203e015e",
+  "send-message": "https://functions.poehali.dev/9436bfe2-da24-4f42-b1ed-6ac072d81a35",
+  "messenger-auth": "https://functions.poehali.dev/b648a97e-5eb7-4376-b0b0-b2e95373f64b",
   "send-application": "https://functions.poehali.dev/414195d8-31f8-470f-8abe-4a514ceb2f72"
 }

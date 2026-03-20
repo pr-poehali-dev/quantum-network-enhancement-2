@@ -299,6 +299,9 @@ const ApplicationForm = ({ onClose, onSuccess, t }: { onClose: () => void; onSuc
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        localStorage.setItem("ww3_email", form.email);
+        localStorage.setItem("ww3_country", form.country);
+        localStorage.setItem("ww3_position", form.position);
         onSuccess(form.name);
       } else {
         setErrorMsg(data.error || t.errFill);
@@ -447,6 +450,10 @@ const Index = () => {
               <Icon name="Info" className="w-4 h-4 mr-2" />
               {t.about}
             </Button>
+            <a href="/messenger" className="flex items-center gap-2 bg-[#2d6a4f] hover:bg-[#1b4332] px-4 py-2 rounded-lg transition-colors">
+              <Icon name="MessageCircle" className="w-4 h-4 text-white" />
+              <span className="text-white text-sm font-medium">Мессенджер</span>
+            </a>
             <div className="flex items-center gap-2 bg-[#2a2d38] px-4 py-2 rounded-lg">
               <div className="w-6 h-6 bg-[#2d6a4f] rounded-full flex items-center justify-center text-xs font-bold text-white">
                 {userName.charAt(0).toUpperCase()}
